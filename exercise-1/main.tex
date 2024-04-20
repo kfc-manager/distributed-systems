@@ -1,0 +1,194 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{subfiles}
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=20mm,
+ top=20mm,
+ }
+
+\lstdefinestyle{CStyle}{
+  basicstyle=\ttfamily,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=left,
+  numbersep=5pt,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=2,
+}
+
+\lstset{style=CStyle}
+
+\title{Distributes Systems}
+\author{Kilian Calefice (796461)}
+\date{20.04.2024}
+
+\begin{document}
+
+\maketitle
+
+\subsection*{1. System Models}
+
+Consider the three peer-to-peer systems shown below. Each of these comprises four processes $P_1$, $P_2$,
+$P_3$ and $P_4$ connected through bidirectional communication channels which are depicted by the edges
+in the graph. Furthermore, each system is $synchronous$ (as defined in the lecture), with an upper bound
+$d$ on message delay.\\
+\\
+\noindent\makebox[\textwidth]{\includegraphics[scale=0.35]{p2p.png}}\\
+\\
+Assume you are asked to design communication protocols for each of these systems, such that the following
+specification is implemented:\\
+\\
+\texttt{A message} $m$ \texttt{sent by any process} $P_i$ \texttt{is delivered to all other processes}
+$P_j, j \neq i$\texttt{, exactly once and all at the same time.}\\
+\\
+A colleague of yours proposes the following protocol for System A (fully interconnected):\\
+\\
+A) sender protocol:
+\begin{lstlisting}[style=CStyle]
+t <- clock.now();
+send (m, t) to neighbours;
+\end{lstlisting}
+A) receiver protocol:
+\begin{lstlisting}[style=CStyle]
+(m, t) <- receive();
+delayUnit(t + d);
+deliver(m);
+\end{lstlisting}
+a) With the described system model, is it possible to modify the proposed protocol such that it meets the
+specification? Justify!\\
+\\
+The assumption must be made that all the processes $P_j$ for $i \neq j$ receive the messages before the
+upper bound is hit. With the communication being synchronous that might not be the case, since all sends
+and all receives are blocking. Since the loop on the sender side each iteration is waiting until the send 
+call is executed and until the receive call was executed and the receiver send it's acknowledge to the 
+sender. Under circumstances this overhead causes a huge enough delay that the upper delay already expired 
+and since the sender is not checking if its sending messages while the delay is not expired it can not be 
+sure that the messages are all delivered to the receiving processes at the same point of time. Further 
+the receivers are acknowledging the received messages before evaluating if the contract to respect the 
+delay can be met and errors only occur after the blocking of the receive call when the communication with 
+$P_i$ has already happened. In conclusion I would suggest implementing a mechanism to check on the sender
+side if the delay requirement can still be met:\\
+\\
+A) sender protocol:
+\begin{lstlisting}[style=CStyle]
+t <- clock.now() + d;
+i <- 0;
+for neighbours.length() < i {
+  send (m, t) to neighbours[i];
+  if t < clock.now() {
+    error(wasn't able to deliver message in time);
+  }
+  i <- i + 1;
+}
+\end{lstlisting}
+A) receiver protocol:
+\begin{lstlisting}[style=CStyle]
+(m, t) <- receive();
+delayUnit(t);
+deliver(m);
+\end{lstlisting}
+If no error was thrown the sender can now be sure that all receivers were able to get their message at
+the same point in time.\\
+\\
+b) What additional assumptions must be added to the system model (interaction and failure model) such
+that the proposed protocol meets the specification?\\
+\\
+As stated in a) the proposed protocol doesn't account for the fact that receivers might receive messages
+at the point of time that is already bigger than the point of time describing the delay. So in order for
+the proposed protocol to work the assumption must be made that for all receivers the delay is not hit
+before the receive call exits it's blocking state.\\
+\\
+For the remainder of this question, the additional assumptions that you derived in part b) are added to
+the system model!\\
+\\
+c) With your new system model, design a similar procol fullfilling the given specification for System B
+with minimal communication and storage requirements!\\
+\\
+B) sender protocol:
+\begin{lstlisting}[style=CStyle]
+t <- clock.now() + d;
+for v in neighbours {
+  // this.index is the index of this process
+  send (m, t, this.index) to neighbours[i];
+  if t < clock.now() {
+    error(wasn't able to deliver message in time);
+  }
+}
+\end{lstlisting}
+B) receiver protocol:
+\begin{lstlisting}[style=CStyle]
+// index is the index sent by the sender
+(m, t, index) <- receive();
+for v in neighbours {
+  if index < 0 {
+    continue
+  }
+  if index == v.index {
+    continue
+  }
+  if v.index != this.index + 1 and v.index != this.index - 3{
+    continue
+  }
+  send (m, t, -1) to v;
+}
+delayUnit(t);
+deliver(m);
+\end{lstlisting}
+This implementation works under the assumption that we only forward the message to one more process after
+the initial round of sending. The original sender sends his index with the send so that the receiving
+processes don't forward the message to the sender. Also the processes only forward the message to 
+processes with an index of their index incremented by one or their index minus three (catching the case
+that $P_1$ is the process needing the message to be forwarded). This ensures that the receiving processes 
+don't forward the message both. Also the process receiving the forwarded message knows that it should not
+further forward because the index -1 is sent when a message gets forwarded. That way it is ensured that
+a message gets only forwarded one "round".\\
+\\
+d) With your new system model, design a similar protocol fullfilling the given specification for System
+C with minimal communication and storage requirements!\\
+\\
+C) sender protocol:
+\begin{lstlisting}[style=CStyle]
+t <- clock.now() + d;
+for v in neighbours {
+  // this.index is the index of this process
+  send (m, t, this.index) to neighbours[i];
+  if t < clock.now() {
+    error(wasn't able to deliver message in time);
+  }
+}
+\end{lstlisting}
+C) receiver protocol:
+\begin{lstlisting}[style=CStyle]
+// index is the index sent by the sender
+(m, t, index) <- receive();
+for v in neighbours {
+  if index == v.index {
+    continue
+  }
+  send (m, t, this.index) to v;
+}
+delayUnit(t);
+deliver(m);
+\end{lstlisting}
+This time we don't have to cover the case that multiple processes might be trying to forward a message to
+the same process. Thats why it is enough to limit a receiver to not be allowed to forward the message it 
+received to the process it received it from.\\
+\\
+\subsection*{2. Three-Army-Problem}
+
+
+\subsection*{3. Unreliable and Reliable Communication}
+
+\end{document}
