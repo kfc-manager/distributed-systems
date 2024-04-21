@@ -187,7 +187,59 @@ the same process. Thats why it is enough to limit a receiver to not be allowed t
 received to the process it received it from.\\
 \\
 \subsection*{2. Three-Army-Problem}
-
+In the following we discuss a variation of the Two-Army-Problem presented in the lecture. Similar to the
+Two-Army-Problem, the goal of the Three-Army-Problem is to reach agreement among three divisions about
+the order time of the attack. In this case, it must be guranteed that the largest division attack last.\\
+\\
+The protocol must be clearly devided into two phases:\\
+\\
+1. The divisions coordinate the \textbf{order of attack} (by division size)\\
+\\
+2. The largest division determines the \textbf{time of attack} and informs the other divisions.\\
+\\
+Furthermore, attacks of subsequent divisions should take place \textbf{at least 1 minute apart}.\\
+Assume a synchronous system, where no errors occur on the communication channel. A messenger between any
+two divisions may take up to $d$ minutes. You may assume that all divisions are of different size. An
+arbitrary division initiates the protocol at time $t_0$.\\
+Note: There is no drift between the division's clocks.\\
+\\
+a) Here, assume that the clocks of all three divisions are perfectly synchronized (i. e. no drift, no
+clock skew). Briefly describe a protocol for the Three-Army-Problem that fulfils the following two
+conditions:\\
+\\
+1. The time between the first attack and the last attack must be minimal.\\
+2. The first attack should start as soon as possible (without violating the first condition).\\
+\\
+Illustrate your protocol through a time-space-diagram.\\
+Provide the worst-case attack times (i. e. messenger time = $d$) for each division.\\
+\\
+\noindent\makebox[\textwidth]{\includegraphics[scale=0.075]{clock.png}}\\
+The first division sends the messenger to the second division and sends it's time stamp as the message.
+Then the second division sends the messenger back for the acknowledge with the time stamp when they 
+received the message. Then the messenger is send to the third devision with the message of the how long 
+it took the messenger to deliver the first message. With that information exchange we let the first 
+division attack after the duration of it's first send which will be $\leq d$ we will call 
+that vairable $x$ and $3d$ since the other two divisions can't know how long their acknowledges took and 
+also the second division can't know how long it took to deliver the message to the third division. We let 
+the second division attack one second after the first division and the third two seconds after. In other 
+words we let attack the first division at $3dx$ the second at $3dx + 1$ and the third $3dx + 2$ with $x$ 
+being $\leq d$. In the worst case $x$ will be equal $d$ and therefore in the worst case the first 
+division attacks at $4d$, the second at $4d + 1$ and the third at $4d + 2$. The only advantage we could 
+take here was that we can measure how long the first send actually took and let all divisions know how 
+long it took and eventually we don't have to wait one full delay.\\
+\\
+b) Now, assume that there may be an arbitrary clock skew (but no drift) between the clocks of different
+divisions! Design a protocol that fulfils the two conditions given in part a), but with reversed priority,
+that is:\\
+\\
+1. The first attack must start as soon as possible.\\
+\\
+2. The time between the first attack and the last attack should be minimal (without violating the first
+condition).\\
+\\
+Again, briefly describe your protocol and illustrate it through a time-space-diagram and provide the
+worst-case attack times (i. e. messenger time = $d$) for each division.\\
+\\
 
 \subsection*{3. Unreliable and Reliable Communication}
 
