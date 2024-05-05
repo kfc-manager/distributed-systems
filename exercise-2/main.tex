@@ -1,0 +1,117 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{subfiles}
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=20mm,
+ top=20mm,
+ }
+
+\lstdefinestyle{CStyle}{
+  basicstyle=\ttfamily,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=left,
+  numbersep=5pt,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=2,
+}
+
+\lstset{style=CStyle}
+
+\title{Distributes Systems}
+\author{Kilian Calefice (796461)}
+\date{20.04.2024}
+
+\begin{document}
+
+\maketitle
+
+\section*{1. Parameter Passing}
+
+a) In the lecture, we discussed the parameter passing approaches Call-By-Value and Call-By-Reference.
+Here, we also explore Call-By-Copy/Restore. With Call-By-Value, a copy of the provided parameter value is
+given to the callee to operate on. In contrast, with Call-By-Reference, a reference to the variable 
+provided as a parameter is given to the callee to operate on. Again, in Call-By-Copy/Restore, parameter
+passing is handled by sending a copy of the referenced variable to the callee, and on return replacing
+the caller's copy with that modified by the callee.\\
+With RPC, all three parameter passing approaches may be used. What will the output of the procedure 
+\texttt{MAIN} be (i. e., the value of the array $a$ on line 11) if \texttt{ROTATE} is called with an RPC
+protocol using...\\
+\\
+\begin{itemize}
+  \item ...Call-By-Value\\
+  \item ...Call-By-Reference\\
+  \item ...Call-By-Copy/Restore
+\end{itemize}
+\begin{lstlisting}[style=CStyle]
+procedure ROTATE(var x,y: array[6], var n: integer, var i:integer)
+  y[i] <- x[(i + n) mod 6];
+  if i < 5 then
+    ROTATE(x, y, n, i+1)
+  end if
+end procedure
+
+procedure MAIN
+  var a: array[6];
+  a <- [A, B, C, D, E, F];
+  ROTATE(a, a, 3, 0);
+  print a;
+end procedure
+\end{lstlisting}
+\begin{itemize}
+  \item Call-By-Value: [A, B, C, D, E, F]\\
+  \item Call-By-Reference: [D, E, F, D, E, F]\\
+  \item Call-By-Copy/Restore: [D, E, F, A, B, C]
+\end{itemize}
+
+\section*{2. Socket-Programming, Chat - Client-Server}
+
+Implement a chat system, which uses UDP (User Datagram Protocol) in C:\\
+\\
+a) First the server is communicating with only the client.
+\begin{itemize}
+  \item The server (\texttt{chat_server.c}) should wait on a port given by the parameter for requests.\\
+  \item The client (\texttt{chat_client.c}) sends a message to the server. The server's hostname, 
+    portnumber and chatname will be given a parameters.\\
+  \item The chat server prints the message, the origin, and the timestamp on \texttt{stdout}.\\
+  \item The chat server sends an acknowledgment to the chat client.
+\end{itemize}
+\textbf{Example:}
+\begin{itemize}
+  \item The server is called with: \texttt{chat_server portnumber}\\
+  \item The client call looks like: \texttt{chat_client host portnumber chatname}\\
+  \item Your implementation should first be tested on your \texttt{localhost}. The solution for this
+    assignment is working between \texttt{tiree} and \texttt{coll}. Please use the portnumbers between
+    20001 and 20020.
+\end{itemize}
+
+\section*{3. Chord System}
+
+a) Node 30 needs to resolve the key $k = 16$. Give the sequence of nodes that are visited by this request,
+until the node storing $k$ is reached. Also, give the complete finger table of each node storing $k$ is
+reached. Also, give the complete finger table of each node visited by this request.\\
+\\
+b) Now, assume that node 19 has just joined the network. What is the finger table of node 19 after the
+join procedure has completed? What other finger tables in the network will actually change (you do not
+have to compute the changed finger tables)?\\
+\\
+c) Assume that two nodes join the network at exactly the same time. In which case can this lead to
+inconsistencies in the Chord ring? Name these inconsistencies and briefly illustrate a small example of
+the problem.\\
+\\
+d) In the lecture, part of the an
+
+
+\end{document}
